@@ -14,4 +14,6 @@ Gem::Specification.new do |gem|
   gem.name          = "biscuit-monitor"
   gem.require_paths = ["lib"]
   gem.version       = Biscuit::Monitor::VERSION
+
+  gem.add_runtime_dependency "highline"
 end
