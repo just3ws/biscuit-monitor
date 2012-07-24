@@ -16,4 +16,7 @@ Gem::Specification.new do |gem|
   gem.version       = Biscuit::Monitor::VERSION
 
   gem.add_runtime_dependency 'thor'
+  gem.add_runtime_dependency 'multi_json'
+  gem.add_runtime_dependency 'oj'
+  gem.add_runtime_dependency 'awesome_print'
 end
