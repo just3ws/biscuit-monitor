@@ -34,7 +34,9 @@ module Biscuit
 
       def parse(document)
         data = {}
-        MultiJson.decode(document, symbolize_keys: true).each do |k,v|
+        hash = MultiJson.decode(document, symbolize_keys: true)
+        hash.delete(:list)
+        hash.each do |k,v|
           data[k] = if v.class == String && /^-?\d+$/ =~ v
                       Integer(v)
                     elsif v.class == Hash
@@ -47,15 +49,6 @@ module Biscuit
                                     end
                       end
                       idata
-                    elsif v.class == Array
-                      v.each do |a|
-                        a[1] = if a[1].class == String && /^-?\d+$/ =~ a[1]
-                                 Integer(a[1])
-                               else
-                                 a[1]
-                               end
-                      end
-                      v.inject({}) {|h, kv| h.update(kv.first => kv.last) }
                     else
                       v
                     end
