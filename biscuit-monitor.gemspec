@@ -4,8 +4,8 @@ require File.expand_path('../lib/biscuit-monitor/version', __FILE__)
 Gem::Specification.new do |gem|
   gem.authors       = ["Michael D. Hall"]
   gem.email         = ["mdh@just3ws.com"]
-  gem.description   = %q{TODO: Write a gem description}
-  gem.summary       = %q{TODO: Write a gem summary}
+  gem.description   = %q{Monitors your Clear Hotspot biscuit.}
+  gem.summary       = %q{Console app that will poll your attached Clear Hotspot biscuit.}
   gem.homepage      = ""
 
   gem.files         = `git ls-files`.split($\)
@@ -15,5 +15,5 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
   gem.version       = Biscuit::Monitor::VERSION
 
-  gem.add_runtime_dependency "highline"
+  gem.add_runtime_dependency 'thor'
 end
