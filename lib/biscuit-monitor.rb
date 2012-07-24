@@ -10,11 +10,11 @@ module Biscuit
 
       desc "login", "prompts for username and password"
       def login
-        username = ask("Enter your username:  ") { |q| q.echo = true }
-        password = ask("Enter your password:  ") { |q| q.echo = "*" }
+        $username = "#{ask("Enter your username:  ") { |q| q.echo = true }}".freeze
+        $password = "#{ask("Enter your password:  ") { |q| q.echo = "*" }}".freeze
 
-        puts username
-        puts password
+        puts $username
+        puts $password
       end
     end
   end
