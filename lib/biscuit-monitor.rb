@@ -6,12 +6,14 @@ require 'net/http'
 require 'uri'
 require 'multi_json'
 require 'ap'
+require 'logger'
 
 module Biscuit
   module Monitor
 
     class Monitor
       def initialize(username, password, device_ip)
+        @logger = Logger.new('biscuit-monitor.log', 10, 1024000)
         @username = username
         @password = password
         @device_ip = device_ip
@@ -23,7 +25,9 @@ module Biscuit
 
       def poll
         begin
-          ap parse(scrub_response(Net::HTTP.get(device_uri)))
+          response = parse(scrub_response(Net::HTTP.get(device_uri)))
+          ap response
+          @logger.debug(response)
           sleep 5
         end until false
       end
@@ -51,6 +55,7 @@ module Biscuit
                                  a[1]
                                end
                       end
+                      v.inject({}) {|h, kv| h.update(kv.first => kv.last) }
                     else
                       v
                     end
