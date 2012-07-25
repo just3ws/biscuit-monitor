@@ -10,20 +10,19 @@ require 'uri'
 
 module Biscuit
   module Monitor
-    trap("SIGINT") {
-      @logger.info('No longer monitoring your biscuit.') if @logger
-      throw :ctrl_c
-    }
+    trap("SIGINT") { throw :ctrl_c }
 
     class Monitor
       def initialize(device_ip)
         @logger = Logger.new('biscuit-monitor.log', 10, 1024000)
         @device_ip = device_ip
-        @seconds = 5
+        @seconds = 3
       end
 
       def device_uri
         URI.parse("http://#{@device_ip}/cgi-bin/webmain.cgi?act=act_wimax_status&param=WIMAX_LINK_STATUS,WIMAX_DEVICE_STATUS")
+        # TODO get the battery status
+        # URI.parse("http://#{@device_ip}/cgi-bin/webmain.cgi?act_battery_status&TYPE=BISCUIT&param=BATTERY_STATUS")
       end
 
       def clear_last_message
@@ -36,22 +35,36 @@ module Biscuit
 
             response = parse(scrub_response(Net::HTTP.get(device_uri)))
 
-            signal_strength = Integer(response[:data][:cinr])
+            cinr = Integer(response[:data][:cinr])
 
-            foreground_color = case
-                               when signal_strength > 24
+            cinr_foreground_color = case
+                               when cinr > 24
                                  :green
-                               when (13..24).include?(signal_strength)
+                               when (13..24).include?(cinr)
                                  :light_green
-                               when (8..12).include?(signal_strength)
+                               when (8..12).include?(cinr)
                                  :yellow
-                               when (3..7).include?(signal_strength)
+                               when (3..7).include?(cinr)
                                  :light_red
-                               when signal_strength < 3
+                               when cinr < 3
                                  :red
                                end
 
-            write "Signal Strength: #{signal_strength}".colorize(foreground_color)
+            rssi = Integer(response[:data][:rssi])
+            rssi_foreground_color = case
+                               when rssi > -50
+                                 :green
+                               when rssi < -100
+                                 :red
+                               else
+                                 :yellow
+                               end
+
+            message = "CINR: #{cinr}dBs".colorize(cinr_foreground_color)
+            message << " ".uncolorize
+            message << "RSSI: #{rssi}dBs".colorize(rssi_foreground_color)
+
+            write message
             @logger.debug(response)
 
           rescue Errno::EHOSTUNREACH => err
