@@ -29,40 +29,43 @@ module Biscuit
         (@last_message || "").length.times { print "\b" }
       end
 
+      def cinr_foreground_color(cinr)
+        case
+        when cinr > 24
+          :green
+        when (13..24).include?(cinr)
+          :light_green
+        when (8..12).include?(cinr)
+          :yellow
+        when (3..7).include?(cinr)
+          :light_red
+        when cinr < 3
+          :red
+        end
+      end
+
+      def rssi_foreground_color (rssi)
+        case
+        when rssi > -50
+          :green
+        when rssi < -100
+          :red
+        else
+          :yellow
+        end
+      end
+
       def poll
         catch :ctrl_c do
           begin
-
             response = parse(scrub_response(Net::HTTP.get(device_uri)))
 
             cinr = Integer(response[:data][:cinr])
-
-            cinr_foreground_color = case
-                               when cinr > 24
-                                 :green
-                               when (13..24).include?(cinr)
-                                 :light_green
-                               when (8..12).include?(cinr)
-                                 :yellow
-                               when (3..7).include?(cinr)
-                                 :light_red
-                               when cinr < 3
-                                 :red
-                               end
-
             rssi = Integer(response[:data][:rssi])
-            rssi_foreground_color = case
-                               when rssi > -50
-                                 :green
-                               when rssi < -100
-                                 :red
-                               else
-                                 :yellow
-                               end
 
-            message = "CINR: #{cinr}dBs".colorize(cinr_foreground_color)
+            message = "CINR: #{cinr}dBs".colorize(cinr_foreground_color(cinr))
             message << " ".uncolorize
-            message << "RSSI: #{rssi}dBs".colorize(rssi_foreground_color)
+            message << "RSSI: #{rssi}dBs".colorize(rssi_foreground_color(rssi))
 
             write message
             @logger.debug(response)
