@@ -18,5 +18,5 @@ Gem::Specification.new do |gem|
   gem.add_runtime_dependency 'thor'
   gem.add_runtime_dependency 'multi_json'
   gem.add_runtime_dependency 'oj'
-  gem.add_runtime_dependency 'awesome_print'
+  gem.add_runtime_dependency 'colorize'
 end
