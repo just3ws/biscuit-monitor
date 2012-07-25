@@ -19,7 +19,6 @@ module Biscuit
       def initialize(device_ip)
         @logger = Logger.new('biscuit-monitor.log', 10, 1024000)
         @device_ip = device_ip
-        @message = ""
         @seconds = 5
       end
 
@@ -28,13 +27,12 @@ module Biscuit
       end
 
       def clear_last_message
-        (@message || "").length.times { print "\b" }
+        (@last_message || "").length.times { print "\b" }
       end
 
       def poll
         catch :ctrl_c do
           begin
-            clear_last_message
 
             response = parse(scrub_response(Net::HTTP.get(device_uri)))
 
@@ -53,24 +51,33 @@ module Biscuit
                                  :red
                                end
 
-            @message = "Signal Strength: #{signal_strength}".colorize(foreground_color)
-
-
+            write "Signal Strength: #{signal_strength}".colorize(foreground_color)
             @logger.debug(response)
 
           rescue Errno::EHOSTUNREACH => err
-            @message = "Cannot find the biscuit. Check your connection."
+
+            write "Cannot find the biscuit. Check your connection."
             @logger.error(err.inspect)
 
           rescue StandardError => err
+
+            write "There was an error checking your biscuit. See the logfile for details."
             @logger.error(err.inspect)
+
           ensure
-            print @message
+
             sleep @seconds  # TODO when error increase length of time until next check to avoid spamming error log
           end until false
 
         end
       end
+
+      def write(message)
+        clear_last_message
+        print message
+        @last_message = message
+      end
+
 
 
       def parse(document)
@@ -117,11 +124,7 @@ module Biscuit
       desc "start", "Start monitoring your biscuit."
       method_option :device_ip, :default => "192.168.1.1", :aliases => "-d"
       def start
-
-        device_ip = options[:device_ip]
-        device_ip ||= ask("Enter your device ip:  ") { |q| q.echo = "*" }
-
-        Biscuit::Monitor::Monitor.new(device_ip).poll
+        Biscuit::Monitor::Monitor.new(options[:device_ip]).poll
       end
     end
   end
