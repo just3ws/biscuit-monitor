@@ -4,7 +4,7 @@ require File.expand_path('../lib/biscuit-monitor/version', __FILE__)
 Gem::Specification.new do |gem|
   gem.authors       = ["Michael D. Hall"]
   gem.email         = ["mdh@just3ws.com"]
-  gem.description   = %q{Monitors your Clear Hotspot biscuit.}
+  gem.description   = %q{Monitors your CLEAR Spot 4G+ Personal Hotspot.}
   gem.summary       = %q{Console app that will poll your attached Clear Hotspot biscuit.}
   gem.homepage      = "https://github.com/just3ws/biscuit-monitor"
 
