@@ -6,7 +6,7 @@ Gem::Specification.new do |gem|
   gem.email         = ["mdh@just3ws.com"]
   gem.description   = %q{Monitors your Clear Hotspot biscuit.}
   gem.summary       = %q{Console app that will poll your attached Clear Hotspot biscuit.}
-  gem.homepage      = ""
+  gem.homepage      = "https://github.com/just3ws/biscuit-monitor"
 
   gem.files         = `git ls-files`.split($\)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
