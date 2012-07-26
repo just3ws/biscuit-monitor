@@ -15,8 +15,11 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
   gem.version       = Biscuit::Monitor::VERSION
 
-  gem.add_runtime_dependency 'thor'
+  gem.add_runtime_dependency 'activerecord'
+  gem.add_runtime_dependency 'colorize'
+  gem.add_runtime_dependency 'geocoder'
   gem.add_runtime_dependency 'multi_json'
   gem.add_runtime_dependency 'oj'
-  gem.add_runtime_dependency 'colorize'
+  gem.add_runtime_dependency 'sqlite3'
+  gem.add_runtime_dependency 'thor'
 end
