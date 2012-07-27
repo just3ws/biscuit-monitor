@@ -1,14 +1,25 @@
 # encoding: utf-8
 
-require 'active_record'
+require 'active_support'
 require 'biscuit-monitor/version'
 require 'colorize'
 require 'logger'
 require 'multi_json'
 require 'net/http'
+require 'sequel'
 require 'sqlite3'
 require 'thor'
 require 'uri'
+require 'etc'
+
+HOME_DIR = Etc.getpwuid.dir
+biscuit_monitor_artifacts = "#{HOME_DIR}/.biscuit-monitor"
+Dir.mkdir(biscuit_monitor_artifacts) unless File.directory?(biscuit_monitor_artifacts)
+DB = Sequel.sqlite("#{HOME_DIR}/.biscuit-monitor/biscuit_monitor.db", :loggers => [Logger.new($stdout)])
+Sequel.extension :migration
+Sequel::Migrator.apply(DB, File.expand_path(File.dirname(__FILE__)) + '/migrations')
+
+SCAN_WIFI_COMMAND = %x[/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -s]
 
 module Biscuit
   module Monitor
@@ -19,6 +30,7 @@ module Biscuit
 
       desc "start", "Start monitoring your biscuit."
       method_option :device_ip, :default => "192.168.1.1", :aliases => "-d"
+
       def start
         Biscuit::Monitor::Monitor.new(options[:device_ip]).poll
       end
@@ -32,7 +44,7 @@ module Biscuit
       end
 
       def device_uri
-        URI.parse("http://#{@device_ip}/cgi-bin/webmain.cgi?act=act_wimax_status&param=WIMAX_LINK_STATUS,WIMAX_DEVICE_STATUS")
+        URI.parse("http://#@device_ip/cgi-bin/webmain.cgi?act=act_wimax_status&param=WIMAX_LINK_STATUS,WIMAX_DEVICE_STATUS")
         # TODO get the battery status
         # URI.parse("http://#{@device_ip}/cgi-bin/webmain.cgi?act_battery_status&TYPE=BISCUIT&param=BATTERY_STATUS")
       end
@@ -43,45 +55,57 @@ module Biscuit
 
       def cinr_foreground_color(cinr)
         case
-        when cinr > 24 then :green
-        when (13..24).include?(cinr) then :light_green
-        when (8..12).include?(cinr) then :yellow
-        when (3..7).include?(cinr) then :light_red
-        when cinr < 3 then :red
+          when cinr > 24 then
+            :green
+          when (13..24).include?(cinr) then
+            :light_green
+          when (8..12).include?(cinr) then
+            :yellow
+          when (3..7).include?(cinr) then
+            :light_red
+          when cinr < 3 then
+            :red
+          else
+            :white
         end
       end
 
       def rssi_foreground_color (rssi)
         case
-        when rssi > -50 then :green
-        when rssi < -100 then :red
-        else :yellow
+          when rssi > -50 then
+            :green
+          when rssi < -100 then
+            :red
+          else
+            :yellow
         end
       end
 
       def poll
         catch :ctrl_c do
-          begin
-            response = parse(scrub_response(Net::HTTP.get(device_uri)))
+          until false
+            begin
+              response = parse(scrub_response(Net::HTTP.get(device_uri)))
 
-            cinr = Integer(response[:data][:cinr])
-            rssi = Integer(response[:data][:rssi])
+              cinr = Integer(response[:data][:cinr])
+              rssi = Integer(response[:data][:rssi])
 
-            message = "CINR: #{cinr}dBs".colorize(cinr_foreground_color(cinr))
-            message << " ".uncolorize
-            message << "RSSI: #{rssi}dBs".colorize(rssi_foreground_color(rssi))
+              message = "CINR: #{cinr}dBs".colorize(cinr_foreground_color(cinr))
+              message << " ".uncolorize
+              message << "RSSI: #{rssi}dBs".colorize(rssi_foreground_color(rssi))
 
-            write message
-            @logger.debug(response)
-          rescue Errno::EHOSTUNREACH => err
-            write "Cannot find the biscuit. Check your connection."
-            @logger.error(err.inspect)
-          rescue StandardError => err
-            write "There was an error checking your biscuit. See the logfile for details."
-            @logger.error(err.inspect)
-          ensure
-            sleep @seconds  # TODO when error increase length of time until next check to avoid spamming error log
-          end until false
+              write message
+              @logger.debug(response)
+            rescue Errno::EHOSTUNREACH => err
+              write "Cannot find the biscuit. Check your connection."
+              @logger.error(err.inspect)
+            rescue StandardError => err
+              write "There was an error checking your biscuit. See the logfile for details."
+              @logger.error(err.inspect)
+            ensure
+              sleep @seconds # TODO when error increase length of time until next check to avoid spamming error log
+            end
+          end
         end
       end
 
@@ -95,7 +119,7 @@ module Biscuit
         data = {}
         hash = MultiJson.decode(document, symbolize_keys: true)
         hash.delete(:list)
-        hash.each do |k,v|
+        hash.each do |k, v|
           data[k] = if v.class == String && /^-?\d+$/ =~ v
                       Integer(v)
                     elsif v.class == Hash
@@ -116,7 +140,7 @@ module Biscuit
       end
 
       def scrub_response(document)
-        document = document.split.join
+        document = document.downcase.split.join
         document.gsub!(/'/, '"')
         document.gsub!(/:(\d*),/, ':"\1",')
         document.gsub!(/(\w*):"/, '"\1":"')
