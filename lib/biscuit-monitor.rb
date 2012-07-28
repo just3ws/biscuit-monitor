@@ -17,15 +17,15 @@ module Biscuit
     HOME_DIR = Etc.getpwuid.dir
     biscuit_monitor_root_dir = "#{HOME_DIR}/.biscuit-monitor"
     Dir.mkdir(biscuit_monitor_root_dir) unless File.directory?(biscuit_monitor_root_dir)
-    biscuit_monitor_log_dir =  "#{biscuit_monitor_root_dir}/log"
+    biscuit_monitor_log_dir = "#{biscuit_monitor_root_dir}/log"
     Dir.mkdir(biscuit_monitor_log_dir) unless File.directory?(biscuit_monitor_log_dir)
 
     LOGGER = Logger.new("#{biscuit_monitor_log_dir}/biscuit-monitor.log", 10, 1024000)
 
-    DB = Sequel.sqlite("#{biscuit_monitor_root_dir}/biscuit_monitor.db", loggers: [LOGGER])
+    DB_CONN = Sequel.sqlite("#{biscuit_monitor_root_dir}/biscuit_monitor.db", loggers: [LOGGER])
 
     Sequel.extension :migration
-    Sequel::Migrator.apply(DB, File.expand_path(File.dirname(__FILE__)) + '/migrations')
+    Sequel::Migrator.apply(DB_CONN, File.expand_path(File.dirname(__FILE__)) + '/migrations')
 
     SCAN_WIFI_COMMAND = %x[/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -s]
 
@@ -37,6 +37,7 @@ module Biscuit
       desc 'start', 'Start monitoring your biscuit.'
       method_option :device_ip, default: '192.168.1.1', aliases: '-d'
       method_option :polling_frequency_in_seconds, default: 3, aliases: '-f'
+
       def start
         Biscuit::Monitor::Monitor.new(options[:device_ip], Integer(options[:polling_frequency_in_seconds])).poll
       end
@@ -60,29 +61,29 @@ module Biscuit
 
       def cinr_foreground_color(cinr)
         case
-        when cinr > 24 then
-          :green
-        when (13..24).include?(cinr) then
-          :light_green
-        when (8..12).include?(cinr) then
-          :yellow
-        when (3..7).include?(cinr) then
-          :light_red
-        when cinr < 3 then
-          :red
-        else
-          :white
+          when cinr > 24 then
+            :green
+          when (13..24).include?(cinr) then
+            :light_green
+          when (8..12).include?(cinr) then
+            :yellow
+          when (3..7).include?(cinr) then
+            :light_red
+          when cinr < 3 then
+            :red
+          else
+            :white
         end
       end
 
       def rssi_foreground_color (rssi)
         case
-        when rssi > -50 then
-          :green
-        when rssi < -100 then
-          :red
-        else
-          :yellow
+          when rssi > -50 then
+            :green
+          when rssi < -100 then
+            :red
+          else
+            :yellow
         end
       end
 
@@ -102,7 +103,7 @@ module Biscuit
               write message
 
               Thread.new {
-                DB[:wi_max_statuses].insert(response)
+                DB_CONN[:wi_max_statuses].insert(response)
                 LOGGER.debug(response)
               }
 
