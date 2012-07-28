@@ -1,34 +1,34 @@
 # encoding: utf-8
 
-require 'biscuit-monitor/version'
-require 'colorize'
-require 'etc'
-require 'logger'
-require 'multi_json'
-require 'net/http'
-require 'sequel'
-require 'sqlite3'
-require 'thor'
-require 'uri'
-
-
-HOME_DIR = Etc.getpwuid.dir
-biscuit_monitor_root_dir = "#{HOME_DIR}/.biscuit-monitor"
-Dir.mkdir(biscuit_monitor_root_dir) unless File.directory?(biscuit_monitor_root_dir)
-biscuit_monitor_log_dir =  "#{biscuit_monitor_root_dir}/log"
-Dir.mkdir(biscuit_monitor_log_dir) unless File.directory?(biscuit_monitor_log_dir)
-
-LOGGER = Logger.new("#{biscuit_monitor_log_dir}/biscuit-monitor.log", 10, 1024000)
-
-DB = Sequel.sqlite("#{biscuit_monitor_root_dir}/biscuit_monitor.db", loggers: [LOGGER])
-
-Sequel.extension :migration
-Sequel::Migrator.apply(DB, File.expand_path(File.dirname(__FILE__)) + '/migrations')
-
-SCAN_WIFI_COMMAND = %x[/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -s]
-
 module Biscuit
   module Monitor
+
+    require 'biscuit-monitor/version'
+    require 'colorize'
+    require 'etc'
+    require 'logger'
+    require 'multi_json'
+    require 'net/http'
+    require 'sequel'
+    require 'sqlite3'
+    require 'thor'
+    require 'uri'
+
+    HOME_DIR = Etc.getpwuid.dir
+    biscuit_monitor_root_dir = "#{HOME_DIR}/.biscuit-monitor"
+    Dir.mkdir(biscuit_monitor_root_dir) unless File.directory?(biscuit_monitor_root_dir)
+    biscuit_monitor_log_dir =  "#{biscuit_monitor_root_dir}/log"
+    Dir.mkdir(biscuit_monitor_log_dir) unless File.directory?(biscuit_monitor_log_dir)
+
+    LOGGER = Logger.new("#{biscuit_monitor_log_dir}/biscuit-monitor.log", 10, 1024000)
+
+    DB = Sequel.sqlite("#{biscuit_monitor_root_dir}/biscuit_monitor.db", loggers: [LOGGER])
+
+    Sequel.extension :migration
+    Sequel::Migrator.apply(DB, File.expand_path(File.dirname(__FILE__)) + '/migrations')
+
+    SCAN_WIFI_COMMAND = %x[/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -s]
+
     trap('SIGINT') { throw :ctrl_c }
 
     class CLI < Thor
