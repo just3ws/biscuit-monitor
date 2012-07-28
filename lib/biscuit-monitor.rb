@@ -37,16 +37,16 @@ module Biscuit
 
       desc 'start', 'Start monitoring your biscuit.'
       method_option :device_ip, default: '192.168.1.1', aliases: '-d'
-
+      method_option :polling_frequency_in_seconds, default: 3, aliases: '-f'
       def start
-        Biscuit::Monitor::Monitor.new(options[:device_ip]).poll
+        Biscuit::Monitor::Monitor.new(options[:device_ip], Integer(options[:polling_frequency_in_seconds])).poll
       end
     end
 
     class Monitor
-      def initialize(device_ip)
+      def initialize(device_ip, polling_frequency_in_seconds)
         @device_ip = device_ip
-        @seconds = 3
+        @polling_frequency_in_seconds = polling_frequency_in_seconds
       end
 
       def device_uri
@@ -102,9 +102,10 @@ module Biscuit
 
               write message
 
-              DB[:wi_max_statuses].insert(response)
-
-              LOGGER.debug(response)
+              Thread.new {
+                DB[:wi_max_statuses].insert(response)
+                LOGGER.debug(response)
+              }
 
             rescue Errno::EHOSTUNREACH => err
 
@@ -118,7 +119,7 @@ module Biscuit
 
             ensure
 
-              sleep @seconds # TODO when error increase length of time until next check to avoid spamming error log
+              sleep @polling_frequency_in_seconds # TODO when error increase length of time until next check to avoid spamming error log
 
             end
           end
