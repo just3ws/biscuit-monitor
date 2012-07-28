@@ -1,6 +1,5 @@
 # encoding: utf-8
 
-require 'active_support'
 require 'biscuit-monitor/version'
 require 'colorize'
 require 'etc'
