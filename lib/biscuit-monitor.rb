@@ -3,6 +3,7 @@
 require 'active_support'
 require 'biscuit-monitor/version'
 require 'colorize'
+require 'etc'
 require 'logger'
 require 'multi_json'
 require 'net/http'
@@ -10,7 +11,6 @@ require 'sequel'
 require 'sqlite3'
 require 'thor'
 require 'uri'
-require 'etc'
 
 LOGGER = Logger.new('biscuit-monitor.log', 10, 1024000)
 
@@ -18,7 +18,7 @@ HOME_DIR = Etc.getpwuid.dir
 biscuit_monitor_artifacts = "#{HOME_DIR}/.biscuit-monitor"
 Dir.mkdir(biscuit_monitor_artifacts) unless File.directory?(biscuit_monitor_artifacts)
 
-DB = Sequel.sqlite("#{HOME_DIR}/.biscuit-monitor/biscuit_monitor.db", :loggers => [LOGGER])
+DB = Sequel.sqlite("#{HOME_DIR}/.biscuit-monitor/biscuit_monitor.db", loggers: [LOGGER])
 
 Sequel.extension :migration
 Sequel::Migrator.apply(DB, File.expand_path(File.dirname(__FILE__)) + '/migrations')
@@ -27,13 +27,13 @@ SCAN_WIFI_COMMAND = %x[/System/Library/PrivateFrameworks/Apple80211.framework/Ve
 
 module Biscuit
   module Monitor
-    trap("SIGINT") { throw :ctrl_c }
+    trap('SIGINT') { throw :ctrl_c }
 
     class CLI < Thor
       default_task :start
 
-      desc "start", "Start monitoring your biscuit."
-      method_option :device_ip, :default => "192.168.1.1", :aliases => "-d"
+      desc 'start', 'Start monitoring your biscuit.'
+      method_option :device_ip, default: '192.168.1.1', aliases: '-d'
 
       def start
         Biscuit::Monitor::Monitor.new(options[:device_ip]).poll
@@ -53,7 +53,7 @@ module Biscuit
       end
 
       def clear_last_message
-        (@last_message || "").length.times { print "\b" }
+        (@last_message || '').length.times { print "\b" }
       end
 
       def cinr_foreground_color(cinr)
@@ -88,29 +88,29 @@ module Biscuit
         catch :ctrl_c do
           until false
             begin
-              response = parse(scrub_response(Net::HTTP.get(device_uri)))
+              response = parse(parse_javascript_to_json(Net::HTTP.get(device_uri)))[:data]
 
-              cinr = Integer(response[:data][:cinr])
-              rssi = Integer(response[:data][:rssi])
+              cinr = Integer(response[:cinr])
+              rssi = Integer(response[:rssi])
 
               message = "CINR: #{cinr}dBs".colorize(cinr_foreground_color(cinr))
-              message << " ".uncolorize
+              message << ' '.uncolorize
               message << "RSSI: #{rssi}dBs".colorize(rssi_foreground_color(rssi))
 
               write message
 
-              DB[:wi_max_statuses].insert(response[:data])
+              DB[:wi_max_statuses].insert(response)
 
               LOGGER.debug(response)
 
             rescue Errno::EHOSTUNREACH => err
 
-              write "Cannot find the biscuit. Check your connection."
+              write 'Cannot find the biscuit. Check your connection.'
               LOGGER.error(err.inspect)
 
             rescue StandardError => err
 
-              write "There was an error checking your biscuit. See the logfile for details."
+              write 'There was an error checking your biscuit. See the logfile for details.'
               LOGGER.error(err.inspect)
 
             ensure
@@ -152,7 +152,7 @@ module Biscuit
         data
       end
 
-      def scrub_response(document)
+      def parse_javascript_to_json(document)
         document = document.downcase.split.join
         document.gsub!(/'/, '"')
         document.gsub!(/:(\d*),/, ':"\1",')
