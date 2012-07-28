@@ -12,10 +12,14 @@ require 'thor'
 require 'uri'
 require 'etc'
 
+LOGGER = Logger.new('biscuit-monitor.log', 10, 1024000)
+
 HOME_DIR = Etc.getpwuid.dir
 biscuit_monitor_artifacts = "#{HOME_DIR}/.biscuit-monitor"
 Dir.mkdir(biscuit_monitor_artifacts) unless File.directory?(biscuit_monitor_artifacts)
-DB = Sequel.sqlite("#{HOME_DIR}/.biscuit-monitor/biscuit_monitor.db", :loggers => [Logger.new($stdout)])
+
+DB = Sequel.sqlite("#{HOME_DIR}/.biscuit-monitor/biscuit_monitor.db", :loggers => [LOGGER])
+
 Sequel.extension :migration
 Sequel::Migrator.apply(DB, File.expand_path(File.dirname(__FILE__)) + '/migrations')
 
@@ -38,7 +42,6 @@ module Biscuit
 
     class Monitor
       def initialize(device_ip)
-        @logger = Logger.new('biscuit-monitor.log', 10, 1024000)
         @device_ip = device_ip
         @seconds = 3
       end
@@ -55,29 +58,29 @@ module Biscuit
 
       def cinr_foreground_color(cinr)
         case
-          when cinr > 24 then
-            :green
-          when (13..24).include?(cinr) then
-            :light_green
-          when (8..12).include?(cinr) then
-            :yellow
-          when (3..7).include?(cinr) then
-            :light_red
-          when cinr < 3 then
-            :red
-          else
-            :white
+        when cinr > 24 then
+          :green
+        when (13..24).include?(cinr) then
+          :light_green
+        when (8..12).include?(cinr) then
+          :yellow
+        when (3..7).include?(cinr) then
+          :light_red
+        when cinr < 3 then
+          :red
+        else
+          :white
         end
       end
 
       def rssi_foreground_color (rssi)
         case
-          when rssi > -50 then
-            :green
-          when rssi < -100 then
-            :red
-          else
-            :yellow
+        when rssi > -50 then
+          :green
+        when rssi < -100 then
+          :red
+        else
+          :yellow
         end
       end
 
@@ -95,15 +98,25 @@ module Biscuit
               message << "RSSI: #{rssi}dBs".colorize(rssi_foreground_color(rssi))
 
               write message
-              @logger.debug(response)
+
+              DB[:wi_max_statuses].insert(response[:data])
+
+              LOGGER.debug(response)
+
             rescue Errno::EHOSTUNREACH => err
+
               write "Cannot find the biscuit. Check your connection."
-              @logger.error(err.inspect)
+              LOGGER.error(err.inspect)
+
             rescue StandardError => err
+
               write "There was an error checking your biscuit. See the logfile for details."
-              @logger.error(err.inspect)
+              LOGGER.error(err.inspect)
+
             ensure
+
               sleep @seconds # TODO when error increase length of time until next check to avoid spamming error log
+
             end
           end
         end
