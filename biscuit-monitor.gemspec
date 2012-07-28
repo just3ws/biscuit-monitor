@@ -15,9 +15,7 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
   gem.version       = Biscuit::Monitor::VERSION
 
-  gem.add_runtime_dependency 'activesupport'
   gem.add_runtime_dependency 'colorize'
-  gem.add_runtime_dependency 'geocoder'
   gem.add_runtime_dependency 'multi_json'
   gem.add_runtime_dependency 'oj'
   gem.add_runtime_dependency 'sequel'
