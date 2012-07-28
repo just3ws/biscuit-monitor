@@ -20,7 +20,8 @@ module Biscuit
     biscuit_monitor_log_dir = "#{biscuit_monitor_root_dir}/log"
     Dir.mkdir(biscuit_monitor_log_dir) unless File.directory?(biscuit_monitor_log_dir)
 
-    LOGGER = Logger.new("#{biscuit_monitor_log_dir}/biscuit-monitor.log", 10, 1024000)
+    LOG_FILE = "#{biscuit_monitor_log_dir}/biscuit-monitor.log"
+    LOGGER = Logger.new(LOG_FILE, 10, 1024000)
 
     DB_CONN = Sequel.sqlite("#{biscuit_monitor_root_dir}/biscuit_monitor.db", loggers: [LOGGER])
 
@@ -109,12 +110,12 @@ module Biscuit
 
             rescue Errno::EHOSTUNREACH => err
 
-              write 'Cannot find the biscuit. Check your connection.'
+              write "Cannot find the biscuit. Check your connection. Tail #{LOG_FILE} for details."
               LOGGER.error(err.inspect)
 
             rescue StandardError => err
 
-              write 'There was an error checking your biscuit. See the logfile for details.'
+              write "There was an error checking your biscuit. Tail #{LOG_FILE} for details."
               LOGGER.error(err.inspect)
 
             ensure
