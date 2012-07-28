@@ -12,13 +12,16 @@ require 'sqlite3'
 require 'thor'
 require 'uri'
 
-LOGGER = Logger.new('biscuit-monitor.log', 10, 1024000)
 
 HOME_DIR = Etc.getpwuid.dir
-biscuit_monitor_artifacts = "#{HOME_DIR}/.biscuit-monitor"
-Dir.mkdir(biscuit_monitor_artifacts) unless File.directory?(biscuit_monitor_artifacts)
+biscuit_monitor_root_dir = "#{HOME_DIR}/.biscuit-monitor"
+Dir.mkdir(biscuit_monitor_root_dir) unless File.directory?(biscuit_monitor_root_dir)
+biscuit_monitor_log_dir =  "#{biscuit_monitor_root_dir}/log"
+Dir.mkdir(biscuit_monitor_log_dir) unless File.directory?(biscuit_monitor_log_dir)
 
-DB = Sequel.sqlite("#{HOME_DIR}/.biscuit-monitor/biscuit_monitor.db", loggers: [LOGGER])
+LOGGER = Logger.new("#{biscuit_monitor_log_dir}/biscuit-monitor.log", 10, 1024000)
+
+DB = Sequel.sqlite("#{biscuit_monitor_root_dir}/biscuit_monitor.db", loggers: [LOGGER])
 
 Sequel.extension :migration
 Sequel::Migrator.apply(DB, File.expand_path(File.dirname(__FILE__)) + '/migrations')
