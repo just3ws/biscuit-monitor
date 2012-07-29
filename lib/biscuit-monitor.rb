@@ -38,8 +38,59 @@ module Biscuit
       desc 'monitor', 'Start monitoring your biscuit.'
       method_option :device_ip, default: '192.168.1.1', aliases: '-d'
       method_option :polling_frequency_in_seconds, default: 3, aliases: '-f'
+
       def monitor
         Biscuit::Monitor::Monitor.new(options[:device_ip], Integer(options[:polling_frequency_in_seconds])).poll
+      end
+    end
+
+    class Cinr
+      attr_accessor :level
+      def initialize(level)
+        @level = Integer(level)
+      end
+
+      def message
+        "CINR: #{@level}dBs".colorize(foreground_color)
+      end
+
+      def foreground_color
+        case
+        when @level > 24 then
+          :green
+        when (13..24).include?(@level) then
+          :light_green
+        when (8..12).include?(@level) then
+          :yellow
+        when (3..7).include?(@level) then
+          :light_red
+        when @level < 3 then
+          :red
+        else
+          :white
+        end
+      end
+    end
+
+    class Rssi
+      attr_accessor :level
+      def initialize(level)
+        @level = Integer(level)
+      end
+
+      def message
+        "RSSI: #{@level}dBs".colorize(foreground_color)
+      end
+
+      def foreground_color
+        case
+        when @level > -50 then
+          :green
+        when @level < -100 then
+          :red
+        else
+          :yellow
+        end
       end
     end
 
@@ -49,56 +100,18 @@ module Biscuit
         @polling_frequency_in_seconds = polling_frequency_in_seconds
       end
 
-      def device_uri
-        URI.parse("http://#@device_ip/cgi-bin/webmain.cgi?act=act_wimax_status&param=WIMAX_LINK_STATUS,WIMAX_DEVICE_STATUS")
-        # TODO get the battery status
-        # URI.parse("http://#{@device_ip}/cgi-bin/webmain.cgi?act_battery_status&TYPE=BISCUIT&param=BATTERY_STATUS")
-      end
-
-      def clear_last_message
-        (@last_message || '').length.times { print "\b" }
-      end
-
-      def cinr_foreground_color(cinr)
-        case
-          when cinr > 24 then
-            :green
-          when (13..24).include?(cinr) then
-            :light_green
-          when (8..12).include?(cinr) then
-            :yellow
-          when (3..7).include?(cinr) then
-            :light_red
-          when cinr < 3 then
-            :red
-          else
-            :white
-        end
-      end
-
-      def rssi_foreground_color (rssi)
-        case
-          when rssi > -50 then
-            :green
-          when rssi < -100 then
-            :red
-          else
-            :yellow
-        end
-      end
-
       def poll
         catch :ctrl_c do
           until false
             begin
               response = parse(parse_javascript_to_json(Net::HTTP.get(device_uri)))[:data]
 
-              cinr = Integer(response[:cinr])
-              rssi = Integer(response[:rssi])
+              cinr = Cinr.new(response[:cinr])
+              rssi = Rssi.new(response[:rssi])
 
-              message = "CINR: #{cinr}dBs".colorize(cinr_foreground_color(cinr))
+              message = cinr.message
               message << ' '.uncolorize
-              message << "RSSI: #{rssi}dBs".colorize(rssi_foreground_color(rssi))
+              message << rssi.message
 
               write message
 
@@ -125,6 +138,19 @@ module Biscuit
           end
         end
       end
+
+      def device_uri
+        URI.parse("http://#@device_ip/cgi-bin/webmain.cgi?act=act_wimax_status&param=WIMAX_LINK_STATUS,WIMAX_DEVICE_STATUS")
+        # TODO get the battery status
+        # URI.parse("http://#{@device_ip}/cgi-bin/webmain.cgi?act_battery_status&TYPE=BISCUIT&param=BATTERY_STATUS")
+      end
+
+      def clear_last_message
+        (@last_message || '').length.times { print "\b" }
+      end
+
+
+
 
       def write(message)
         clear_last_message
