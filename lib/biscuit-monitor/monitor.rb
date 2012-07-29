@@ -15,7 +15,7 @@ module Biscuit
 
               ss = SignalStrength.new(@device_ip)
 
-              message =  ''
+              message = ''
               message << ss.cinr
               message << ' '
               message << ss.rssi

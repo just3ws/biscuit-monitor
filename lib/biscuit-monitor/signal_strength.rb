@@ -3,7 +3,7 @@
 module Biscuit
   module Monitor
 
-    %w< multi_json net/http uri >.each {|dep| require dep }
+    %w< multi_json net/http uri >.each { |dep| require dep }
 
     class SignalStrength
 

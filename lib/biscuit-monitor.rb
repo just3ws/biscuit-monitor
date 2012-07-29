@@ -5,7 +5,7 @@ trap('SIGINT') { throw :ctrl_c }
 module Biscuit
   module Monitor
 
-    %w< etc logger sequel sqlite3 >.each {|dep| require dep }
+    %w< etc logger sequel sqlite3 >.each { |dep| require dep }
 
     HOME_DIR = Etc.getpwuid.dir
     biscuit_monitor_root_dir = "#{HOME_DIR}/.biscuit-monitor"
@@ -23,6 +23,6 @@ module Biscuit
 
     SCAN_WIFI_COMMAND = %x[/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport --scan --xml]
 
-    %w< version cinr rssi monitor cli signal_strength >.each {|dep| require "biscuit-monitor/#{dep}" }
+    %w< version cinr rssi monitor cli signal_strength >.each { |dep| require "biscuit-monitor/#{dep}" }
   end
 end
