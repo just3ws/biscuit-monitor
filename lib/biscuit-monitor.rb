@@ -33,13 +33,12 @@ module Biscuit
     trap('SIGINT') { throw :ctrl_c }
 
     class CLI < Thor
-      default_task :start
+      default_task :monitor
 
-      desc 'start', 'Start monitoring your biscuit.'
+      desc 'monitor', 'Start monitoring your biscuit.'
       method_option :device_ip, default: '192.168.1.1', aliases: '-d'
       method_option :polling_frequency_in_seconds, default: 3, aliases: '-f'
-
-      def start
+      def monitor
         Biscuit::Monitor::Monitor.new(options[:device_ip], Integer(options[:polling_frequency_in_seconds])).poll
       end
     end
