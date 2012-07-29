@@ -23,6 +23,6 @@ module Biscuit
 
     SCAN_WIFI_COMMAND = %x[/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport --scan --xml]
 
-    %w< version cinr rssi monitor cli >.each {|dep| require "biscuit-monitor/#{dep}" }
+    %w< version cinr rssi monitor cli signal_strength >.each {|dep| require "biscuit-monitor/#{dep}" }
   end
 end
