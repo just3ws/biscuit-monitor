@@ -13,7 +13,7 @@ module Biscuit
       method_option :polling_frequency_in_seconds, default: 3, aliases: '-f'
 
       def monitor
-        Biscuit::Monitor::Monitor.new(options[:device_ip], Integer(options[:polling_frequency_in_seconds])).poll
+        Biscuit::Monitor::Poller.new(options[:device_ip], Integer(options[:polling_frequency_in_seconds])).poll
       end
     end
   end

@@ -2,7 +2,7 @@
 
 module Biscuit
   module Monitor
-    class Monitor
+    class Poller
       def initialize(device_ip, polling_frequency_in_seconds)
         @device_ip = device_ip
         @polling_frequency_in_seconds = polling_frequency_in_seconds
