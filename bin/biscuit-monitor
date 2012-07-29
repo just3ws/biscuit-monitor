@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby -w
 # encoding: utf-8
 
+trap('SIGINT') { throw :ctrl_c }
+
 $:.unshift(File.dirname(__FILE__) + '/../lib') unless $:.include?(File.dirname(__FILE__) + '/../lib')
 
 require 'biscuit-monitor'

@@ -1,6 +1,5 @@
 # encoding: utf-8
 
-trap('SIGINT') { throw :ctrl_c }
 
 module Biscuit
   module Monitor
