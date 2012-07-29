@@ -17,12 +17,9 @@ module Biscuit
             begin
               response = parse(parse_javascript_to_json(Net::HTTP.get(device_uri)))[:data]
 
-              cinr = Cinr.new(response[:cinr])
-              rssi = Rssi.new(response[:rssi])
-
-              message = cinr.message
+              message = Cinr.new(response[:cinr]).message
               message << ' '.uncolorize
-              message << rssi.message
+              message << Rssi.new(response[:rssi]).message
 
               write message
 
