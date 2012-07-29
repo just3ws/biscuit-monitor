@@ -28,7 +28,7 @@ module Biscuit
     Sequel.extension :migration
     Sequel::Migrator.apply(DB_CONN, File.expand_path(File.dirname(__FILE__)) + '/migrations')
 
-    SCAN_WIFI_COMMAND = %x[/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -s]
+    SCAN_WIFI_COMMAND = %x[/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport --scan --xml]
 
     trap('SIGINT') { throw :ctrl_c }
 
