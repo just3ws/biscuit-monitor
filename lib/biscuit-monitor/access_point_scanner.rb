@@ -15,7 +15,7 @@ module Biscuit
         @scanned_on = Time.now.utc
 
         @found_access_points = raw_found_access_points.map do |access_point|
-          { ssid_name: access_point["SSID_STR"], bssid: access_point["BSSID"], rssi: access_point["RSSI"], scanned_on: @scanned_on }
+          { ssid: access_point["SSID"].strip, ssid_name: access_point["SSID_STR"], bssid: access_point["BSSID"], rssi: access_point["RSSI"], scanned_on: @scanned_on }
         end
       end
 

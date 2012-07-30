@@ -9,49 +9,47 @@ module Biscuit
       end
 
       def poll
-        catch :ctrl_c do
-          until false
-            begin
+        until false
+          begin
 
-              ss = SignalStrength.new(@device_ip)
-              ss.exec
+            ss = SignalStrength.new(@device_ip)
+            ss.exec
 
-              message = ''
-              message << ss.cinr
-              message << ' '
-              message << ss.rssi
+            message = ''
+            message << ss.cinr
+            message << ' '
+            message << ss.rssi
 
-              write message
+            write message
 
-              Thread.new do
-                ap = AccessPointScanner.new
-                ap.exec
-                ap.found_access_points.each do |access_point|
-                  DB_CONN[:wi_fi_access_points].insert(access_point)
-                  LOGGER.debug(access_point)
-                end
+            Thread.new do
+              ap = AccessPointScanner.new
+              ap.exec
+              ap.found_access_points.each do |access_point|
+                DB_CONN[:wi_fi_access_points].insert(access_point)
+                LOGGER.debug(access_point)
               end
-
-              Thread.new(ss.response) do |sig_str|
-                DB_CONN[:wi_max_statuses].insert(sig_str)
-                LOGGER.debug(sig_str)
-              end
-
-            rescue Errno::EHOSTUNREACH => err
-
-              write "Cannot find the biscuit. Check your connection. Tail #{LOG_FILE} for details."
-              LOGGER.error(err.inspect)
-
-            rescue StandardError => err
-
-              write "There was an error talking to your biscuit. Tail #{LOG_FILE} for details."
-              LOGGER.error(err.inspect)
-
-            ensure
-
-              sleep @polling_frequency_in_seconds # TODO when error increase length of time until next check to avoid spamming error log
-
             end
+
+            Thread.new(ss.response) do |sig_str|
+              DB_CONN[:wi_max_statuses].insert(sig_str)
+              LOGGER.debug(sig_str)
+            end
+
+          rescue Errno::EHOSTUNREACH => err
+
+            write "Cannot find the biscuit. Check your connection. Tail #{LOG_FILE} for details."
+            LOGGER.error(err.inspect)
+
+          rescue StandardError => err
+
+            write "There was an error talking to your biscuit. Tail #{LOG_FILE} for details."
+            LOGGER.error(err.inspect)
+
+          ensure
+
+            sleep @polling_frequency_in_seconds # TODO when error increase length of time until next check to avoid spamming error log
+
           end
         end
       end
