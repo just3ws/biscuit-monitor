@@ -8,4 +8,11 @@ gemspec
 group :development, :test do
 end
 
-gem 'tmuxinator', group: [:development]
+group :development do
+  gem 'ap'
+  gem 'debugger'
+  gem 'hirb'
+  gem 'interactive_editor'
+  gem 'tmuxinator'
+  gem 'wirble'
+end

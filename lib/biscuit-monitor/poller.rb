@@ -14,6 +14,7 @@ module Biscuit
             begin
 
               ss = SignalStrength.new(@device_ip)
+              ss.exec
 
               message = ''
               message << ss.cinr
@@ -22,10 +23,17 @@ module Biscuit
 
               write message
 
-              Thread.new {
-                DB_CONN[:wi_max_statuses].insert(response)
-                LOGGER.debug(response)
-              }
+                ap = AccessPointScanner.new
+                ap.exec
+                ap.found_access_points.each do |access_point|
+                  DB_CONN[:wi_fi_access_points].insert(access_point)
+                  LOGGER.debug(access_point)
+                end
+
+              Thread.new(ss.response) do |sig_str|
+                DB_CONN[:wi_max_statuses].insert(sig_str)
+                LOGGER.debug(sig_str)
+              end
 
             rescue Errno::EHOSTUNREACH => err
 

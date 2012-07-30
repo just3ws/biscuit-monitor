@@ -6,10 +6,15 @@ module Biscuit
     %w< multi_json net/http uri >.each { |dep| require dep }
 
     class SignalStrength
+      attr_reader :response
 
       def initialize(device_ip)
         @device_ip = device_ip
+      end
+
+      def exec
         @response = parse(parse_javascript_to_json(Net::HTTP.get(device_uri)))[:data]
+        @response.merge!(captured_on: Time.now.utc)
       end
 
       def cinr
@@ -62,7 +67,6 @@ module Biscuit
         document.gsub!(/":"/, '": "')
         document.gsub!(/,/, ', ')
       end
-
     end
   end
 end

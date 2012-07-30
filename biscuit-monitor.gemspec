@@ -21,5 +21,5 @@ Gem::Specification.new do |gem|
   gem.add_runtime_dependency 'sequel'
   gem.add_runtime_dependency 'sqlite3'
   gem.add_runtime_dependency 'thor'
-  gem.add_runtime_dependency 'nokogiri'
+  gem.add_runtime_dependency 'nokogiri-plist'
 end
