@@ -3,8 +3,15 @@
 
 trap('SIGINT') { throw :ctrl_c }
 
-$:.unshift(File.dirname(__FILE__) + '/../lib') unless $:.include?(File.dirname(__FILE__) + '/../lib')
+catch :ctrl_c do
+  begin
+    $:.unshift(File.dirname(__FILE__) + '/../lib') unless $:.include?(File.dirname(__FILE__) + '/../lib')
 
-require 'biscuit-monitor'
+    require 'biscuit-monitor'
 
-Biscuit::Monitor::CLI.start
+    Biscuit::Monitor::CLI.start
+  rescue SystemExit, Interrupt
+    raise
+  rescue Exception => ex
+  end
+end
