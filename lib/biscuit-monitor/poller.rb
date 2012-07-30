@@ -23,12 +23,14 @@ module Biscuit
 
               write message
 
+              Thread.new do
                 ap = AccessPointScanner.new
                 ap.exec
                 ap.found_access_points.each do |access_point|
                   DB_CONN[:wi_fi_access_points].insert(access_point)
                   LOGGER.debug(access_point)
                 end
+              end
 
               Thread.new(ss.response) do |sig_str|
                 DB_CONN[:wi_max_statuses].insert(sig_str)
