@@ -13,7 +13,7 @@ module Biscuit
           begin
 
             ss = SignalStrength.new(@device_ip)
-            ss.exec
+            @response = ss.exec
 
             message = ''
             message << ss.cinr
@@ -40,11 +40,13 @@ module Biscuit
 
             write "Cannot find the biscuit. Check your connection. Tail #{LOG_FILE} for details."
             LOGGER.error(err.inspect)
+            LOGGER.debug(@response.inspect)
 
           rescue StandardError => err
 
             write "There was an error talking to your biscuit. Tail #{LOG_FILE} for details."
             LOGGER.error(err.inspect)
+            LOGGER.debug(@response.inspect)
 
           ensure
 

@@ -35,7 +35,7 @@ module Biscuit
 
       def parse(document)
         data = {}
-        hash = MultiJson.decode(document, symbolize_keys: true)
+        hash = raw_hash(document)
         hash.delete(:list)
         hash.each do |k, v|
           data[k] = if v.class == String && /^-?\d+$/ =~ v
@@ -55,6 +55,10 @@ module Biscuit
                     end
         end
         data
+      end
+
+      def raw_hash(document)
+        @raw ||= MultiJson.decode(document, symbolize_keys: true)
       end
 
       def parse_javascript_to_json(document)

@@ -7,8 +7,8 @@ module Biscuit
     class Cinr
       attr_accessor :level
 
-      def initialize(level)
-        @level = Integer(level)
+      def initialize(level=0)
+        @level = Integer(level || 0)
       end
 
       def message
